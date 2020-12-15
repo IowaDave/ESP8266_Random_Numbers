@@ -13,7 +13,7 @@ In fact, there appear to be at least two ways to go about it:
 
 I'm going to show you a one-line code statement that can unleash a fast-flowing stream of random numbers, from deep down inside the 8266 chip, that may pass stringent statistical tests for randomness. This source can be a very good choice for games or simulations that need a lot of random numbers in a hurry.
 
-You can also grab a short Arduino sketch for the 8266, designed to overcome certain limitations on so-called "hardware" random number generators like the one built into the chip.
+You can also grab a short Arduino sketch for the 8266, designed to overcome certain limitations of so-called "hardware" random number generators like the one built into the chip.
 
 It's remarkably easy and fun!  All you need to follow this project is a computer running the Arduino IDE and an 8266 development board &mdash; even the tiny ESP-01 module will do.
 
@@ -105,29 +105,34 @@ I interpret this information to mean that the "hardware" aspect of the thing dep
 
 ### Wait, what does "pseudo-random" mean?
 OK. Let's establish some abbreviations for the sake of clarity.
-* RNG means Random Number Generator, the broad category including any and every method for getting a computer to spit out a series of numbers that we hope will be random.
+
+* RNG means Random Number Generator, the broad category including any and every method for getting a computer to spit out a series of numbers that we hope will be random. What we mean by "random" is a purely mathematical concept: a series of events (within a specified range, such as 0 to 100 or heads/tails) that satisfies two requirements:
+ 
+    1. events occur idependently of one another, and
+    2. each of the different events is always equally likely to occur.
+ 
 * PRNG means Pseudo Random Number Generator. All of these things are computer code sequences that people have been inventing since the early 1950s. They've gotten better over time. Some of them can produce very long series of numbers that cannot easily be distinguised from truly random phenomena. Yet, they share a common limitation: every number that comes out is determined by the numbers that preceeded it. PRNGs are "deterministic" algorithms. Which is the opposite of what "random" means in Nature. PRNGs simulate a false but convincing appearance of randomness; they are pseudo-random.
-* HWRNG means Hardware Random Number Generator. Some people will say TRNG, meaning True Random Number Generator, to mean more or less the same thing. The idea is to incorporate the kind of randomness found in Nature, called entropy. This kind of randomess is "non-deterministic". We cannot know what causes it, nor can we predict it. Much of what goes in the natural world exhibits entropy, if you look closely enough. HWRNGs attempt to capture entropy from the physical world and make it available in the form of numbers that are, by nature, truly random.
+* HWRNG means Hardware Random Number Generator. Some people will say TRNG, meaning True Random Number Generator, to mean more or less the same thing. The idea is to incorporate the kind of randomness found in Nature, called entropy. This kind of randomess is "non-deterministic". We cannot know what causes it, nor can we predict it. Much of what goes on in the natural world exhibits entropy, if you look closely enough. HWRNGs attempt to capture entropy from the physical world and make it available in the form of numbers that are, by nature, truly random.
 
 ### Is the HWRNG on the 8266 that good?
 
-Yes and no. It is good in the sense that it sounds close to what other, modern computers do. The so-called hardware rng's built into Intel boxes and Raspberry Pis apply a similar principle. A hardware circuit generates some entropy, which then gets mixed into a PRNG. The PRNG winds up being the main source of random numbers for the system.
+Yes and no. It is good in the sense that it sounds close to what other, modern computers do. The so-called hardware RNG's built into x86 boxes and Raspberry Pis apply a similar principle. A hardware circuit generates some entropy, which then gets mixed into a PRNG. The PRNG winds up being the main source of random numbers for the system.
 
 It is theoretically sound to use a high-quality PRNG for generating a series of random numbers, rather than using raw, physical entropy. We usually want random numbers that pass statistical tests. We want them to appear "independent and identically distributed." 
 
 A high-quality PRNG can generate streams of billions of numbers that satisfy this desirable appearance. In other words, there is no way to tell that they are *not* random.  
 
-A really smart codebreaker can figure out a PRNG's algorithm, if they get access to a long-enough series of the numbers it produces. There's math for that. After the codebreaker figures it out, then they can predict every value that follows. Which stinks, if you're hoping to use those pseudo-random numbers to encrypt something.
+A really smart codebreaker can figure out a PRNG's algorithm, if they get access to a long-enough series of the numbers it produces. There's math for that. After the codebreaker figures it out, then they can predict every value that follows. It's suddenly not random anymore. Which stinks, if you're hoping to use those pseudo-random numbers to encrypt something.
 
 One way to thwart the codebreaker is to scramble a PRNG's history, so that the numbers coming out are not determined *only* by the numbers that it produced before. In other words, make the numbers be more "independent". 
 
-Bits of physical entropy (such as radioactive decay events), are truly independent of one another. Even the smartest codebreaker having the whole history of the entropy could never predict the next event. Trouble is, this kind of entropy might not have the uniformity of distribution that we desire in our random numbers. 
+Bits of physical entropy (such as radioactive decay events), are truly independent of one another. Even the smartest codebreaker having the whole history of the entropy could never predict the next event. Trouble is, this kind of entropy can be slow to gather and might not have the uniformity of distribution that we desire in our random numbers. 
 
-Combining the two concepts, as the 8266 does, means we may obtain "independence" from the entropy, while we get the desired distributional quality from the PRNG. 
+Combining the two concepts, as the 8266 does, means we may obtain "independence" from the entropy, while we get the desired speed and distributional quality from the PRNG. 
 
 It might not be quite as good (compared to HWRNGs on modern computers) if the PRNG on the 8266 only gets benefit of entropy at startup but not afterward. And there's no physical entropy available if your sketch turns off the radio.
 
-I have not been able to find an authoritative statement regarding whether the 8266 mixes entropy into its HWRNG continuously, rather than only at startup.
+I have not been able to find an authoritative statement regarding whether the 8266 mixes entropy into its HWRNG repeatedly, rather than only one time at startup.
 
 And keep in mind that the HWRNG does not actually expose the bits of entropy available from the radios.
 
@@ -141,11 +146,11 @@ The paper gives an interesting and easily understood critique of the so-called "
 
 We can easily do better, according to Roig. Give the CPU a long loop to execute. It can be as simple as adding the same two numbers over and over. Measure how long it takes. Repeat. Keep track of the measurements because they are likely to vary. The variation is unpredictable; Bingo! entropy can be extracted from a series of these measurements.
 
-It is a kind of side-channel attack on the cpu, for the purpose of extracting entropy from it. Roig proposes that the technique can succeed with any device that contains a cpu. He named it, "SideRand".
+It is a kind of side-channel attack on the cpu, for the purpose of extracting entropy from it. Roig proposes that the technique can succeed with any device that contains a cpu. He named it, "SideRand". The code for it is very short and quite easy to follow.
 
 I playfully modified SideRand for the Arduino IDE, targeting an 8266-based ESP-01 module. And I think it works.
 
-The trick was how to harvest the entropy and distill it into random numbers. Roig published several versions of his paper, in which he offered listings in C and Python. Alas, he stops at the point of having gathered a lot of different timing measurements, but does not go on to demonstrate the next step.
+The trick was how to harvest the entropy and distill it into random numbers. Roig published several versions of his paper, in which he offered code listings in C and Python. Alas, he stops at the point of having gathered a lot of different timing measurements, but does not go on to demonstrate the next step.
 
 He does hint at the step, however. In one of the papers he mentions that the measurements "get hashed." Ah-hah! thought I. Feed the series of measurements into a hash algorithm.
 
@@ -182,7 +187,7 @@ That's another conversation for another time, outside the scope of this article.
 
 What does appear to work well is to use a high-quality pseudo-random number generator (PRNG) algorithm, but to "seed" it with entropy obtained from a physical-world source. The random-looking bytes that emerge from SideRand and SHA256 running on an 8266 could be candidates for seeding such a PRNG.
 
-Of course, so might the entropy, derived from the radios, available to the 8266's own generator. And this combination does appear to work well from a statistical perspective. At least one enthusiast, Dr. Abhishek Ghosh, wrote earlier this year that the "hardware" random number generator on the 8266's sister chip, the ESP32, has been shown to pass a very difficult set of statistical tests when running with the radios enabled. [(6)](https://thecustomizewindows.com/2020/05/esp32-as-hardware-random-number-generator/)
+It sounds very much like the entropy, derived from the radios, going into the PRNG built into the 8266's own generator. And this combination does appear to work well from a statistical perspective. At least one enthusiast, Dr. Abhishek Ghosh, wrote earlier this year that the "hardware" random number generator on the 8266's sister chip, the ESP32, has been shown to pass a very difficult set of statistical tests when running with the radios enabled. [(6)](https://thecustomizewindows.com/2020/05/esp32-as-hardware-random-number-generator/)
 
 ### But... Is It Cryptographically Secure?
 Ah, that question always comes up. My answer is, Who Knows? 
