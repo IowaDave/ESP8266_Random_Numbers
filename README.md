@@ -15,7 +15,14 @@ I'm going to show you a one-line code statement that can unleash a fast-flowing 
 
 You can also grab a short Arduino sketch for the 8266, designed to overcome certain limitations of so-called "hardware" random number generators like the one built into the chip.
 
-It's remarkably easy and fun!  All you need to follow this project is a computer running the Arduino IDE and an 8266 development board &mdash; even the tiny ESP-01 module will do.
+It's remarkably easy and fun!  All you need to follow this project is:
+
+* an 8266 development board &mdash; even the tiny ESP-01 module will do,
+* a computer running the Arduino IDE, and
+* a USB connection between the computer and the 8266. You'll need the right cable or adapter to go between the device and your computer.
+    * The ESP-01 will need a programming adapter, as shown in the photo above.
+    * NodeMCU and Wemos-style D1 Mini modules have USB built in. 
+    * Unfortunately, most Chromebooks do not (yet) make their USB available to 8266s.
 
 ### Get serious for a moment
 > Readers should take note that I disclaim and make no effort to prove whether either of these methods produce truly random numbers. Take what's here in a playful spirit, have fun, maybe learn something, and that's all.
