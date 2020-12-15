@@ -112,7 +112,30 @@ And keep in mind that the "hardware" rng does not actually expose the bits of en
 
 Yes. There might be. Maybe not from the radios. But quite possibly from the operation of the CPU, itself.
 
+JV Roig, of Asia Pacific College, published an intriguing paper in 2018 about exploiting the variability of cpu run-times as a source of physical entropy for random number generation and cryptography. [(5)](http://research.jvroig.com/siderand/RoigJV_Crypto_FullPaper_ICIRSTM2018_2018-07-30.pdf)
 
+The paper gives an interesting and easily understood critique of the so-called "hardware random number generators" that come built-into computer CPUs these days. The one on the 8266 would be subject to the same, doubtful remarks. See the paper for this worthwhile commentary.
+
+We can easily do better, according to Roig. Give the CPU a long loop to execute. It can be as simple as adding the same two numbers over and over. Measure how long it takes. Repeat. Keep track of the measurements because they are likely to vary. The variation is unpredictable; Bingo! entropy.
+
+It is a kind of side-channel attack on the cpu, for the purpose of extracting entropy from it. Roig proposes that the technique can succeed with any device that contains a cpu. He named it, "SideRand".
+
+I playfully modified SideRand for the Arduino IDE, targeting an 8266-based ESP-01 module. And I think it works.
+
+The trick was how to harvest the entropy and distill it into random numbers. Roig published several versions of his paper, in which he offered listings in C and Python. Alas, he stops at the point of having gathered a lot of different timing measurements, but does not go on to demonstrate the next step.
+
+He does hint at the step, however. In one of the papers he mentions that the measurements "get hashed." Ah-hah! thought I. Feed the measurements to a hash algorithm.
+
+The SHA256 algorithm enjoys a good reputation for digesting lengthy streams of bytes into 256-bit (32-byte) strings that appear random. It is claimed (and so far not refuted, to the best of my knowledge) that if more than 256 "bits of entropy" are in the stream of bytes entering the hash algorithm, then the resulting hash will also contain nearly 256 bits of entropy.
+
+Remember, entropy is Mother Nature's random number generator. Not even the best codebreaker is going to hack Mother Nature. 
+
+#### What does it mean?  
+An 8266 can be a source of entropy taken directly from physical hardware if: 
+1. Roig is right about scraping entropy off the side of a hard-working cpu, and 
+2. I'm right about using a hash algorithm to distill that entropy into a number format.
+
+### An Arduino IDE sketch for SideRand on 
 
 ***
 Footnotes
