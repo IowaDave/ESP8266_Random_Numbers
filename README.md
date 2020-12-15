@@ -135,15 +135,64 @@ An 8266 can be a source of entropy taken directly from physical hardware if:
 1. Roig is right about scraping entropy off the side of a hard-working cpu, and 
 2. I'm right about using a hash algorithm to distill that entropy into a number format.
 
-### An Arduino IDE sketch for SideRand on 
+### An Arduino IDE sketch for SideRand on an ESP8266
+The Github repository that hosts this article also contains my SideRand sketch for the 8266. Here is a link to it: 
+
+[https://github.com/IowaDave/ESP8266_Random_Numbers](https://github.com/IowaDave/ESP8266_Random_Numbers)
+
+*Comment: this baby takes a long time to run on an 8266. Be patient.*
+
+I modified Roig's algorithm in four ways.
+1. Replace the timing methods in Roig with the micros() function of Arduino IDE.
+2. Increase the number of samples taken, based on analysis of the variation in 8266 cpu runtimes as demonstrated by Roig. The increase seemed necessary to ensure more than 256 bits of entropy  feeding into the SHA256 hash algorithm.
+3. Use a hash algorithm to digest the hardware entropy into numerical form.
+4. Add a command to reset the 8266 watchdog timers frequently. Otherwise the chip resets itself and we never get anywhere.
+
+### Should a hash algorithm be used as a random number generator?
+
+That's another conversation for another time, outside the scope of this article. The gist of goes something like this:
+
+* Hash algorithms in the SHA family produce outputs that for all practical purposes look random. Call that a "yes."
+* Most of the so-called "hardware" random number generators feed their entropy through a hash in the normal course. Call that a "yes."
+* A hash cannot *add* entropy that was not present in the stream of bytes fed into it. Care must be taken to gather enough entropy for the hash to digest. Call that a "maybe, it depends" on what comes before and goes into the hash.
+* Gathering entropy for a hash takes time. It's a slow process. Usually we want random numbers faster than a purely entropy-driven process can obtain. Call that a "maybe, maybe not."
+
+What does appear to work well is to use a high-quality pseudo-random number generator (PRNG) algorithm, but to "seed" it with entropy obtained from a physical-world source. The random-looking bytes that emerge from SideRand and SHA256 running on an 8266 could be candidates for seeding such a PRNG.
+
+Of course, so might the entropy, derived from the radios, available to the 8266's own generator. And this combination does appear to work well from a statistical perspective. At least one enthusiast, Dr. Abhishek Ghosh, wrote earlier this year that the "hardware" random number generator on the 8266's sister chip, the ESP32, has been shown to pass a very difficult set of statistical tests when running with the radios enabled. [(6)](https://thecustomizewindows.com/2020/05/esp32-as-hardware-random-number-generator/)
+
+### But... Is It Cryptographically Secure?
+Ah, that question always comes up. My answer is, Who Knows? Is anything safe from the Codebreaker? 
+
+### Summary
+
+If you want a large number of statistically high-quality random numbers really fast, consider using the "hardware" random number generator of an 8266. Be sure to turn on the radios in your setup procedure, for example this way:
+
+```
+#include <ESP8266WiFi.h>
+
+void setup() {
+
+    WiFi.mode(WIFI_STA)
+
+}
+```
+
+The SideRand => SHA256 technique I toyed with produces numbers that look random to me. They come too slowly for any really robust statistical test, alas. It means I cannot express an opinion about their distribution. However, it does seem to me that they might be "independent", in the sense of being unpredictable. If that is true, then they could be used as seeds for a PRNG.
+
+Roig professes a conviction that the entropy captured by the SideRand algorithm may afford a source of random numbers strong enough to be considered cryptographically secure. 
 
 ***
 Footnotes
 
-(1) "ESP8266 Hardware Random Number Generator Via 0x3FF20E44", [https://twitter.com/ESP8266/status/692469830834855936](https://twitter.com/ESP8266/status/692469830834855936), accessed 14Dec2020. Note: click on the image of the text to view a "photo" of the complete posting.
+(1) "ESP8266 Hardware Random Number Generator Via 0x3FF20E44". [https://twitter.com/ESP8266/status/692469830834855936](https://twitter.com/ESP8266/status/692469830834855936). Accessed 14Dec2020. Note: click on the image of the text to view a "photo" of the complete posting.
 
-(2) "Any details of the esp8266 hardware random number generator?", [https://forum.arduino.cc/index.php?topic=592849.0](https://forum.arduino.cc/index.php?topic=592849.0), accessed 14Dec2020. Note: scroll down to comment #10.
+(2) "Any details of the esp8266 hardware random number generator?". [https://forum.arduino.cc/index.php?topic=592849.0](https://forum.arduino.cc/index.php?topic=592849.0). Accessed 14Dec2020. Note: scroll down to comment #10.
 
-(3) System &mdash; ESP8266 RTOS SDK Programming Guide, [https://docs.espressif.com/projects/esp8266-rtos-sdk/en/latest/api-reference/system/system.html](https://docs.espressif.com/projects/esp8266-rtos-sdk/en/latest/api-reference/system/system.html), accessed 14Dec2020.
+(3) System &mdash; ESP8266 RTOS SDK Programming Guide. [https://docs.espressif.com/projects/esp8266-rtos-sdk/en/latest/api-reference/system/system.html](https://docs.espressif.com/projects/esp8266-rtos-sdk/en/latest/api-reference/system/system.html). Accessed 14Dec2020.
 
-(4) Miscellaneous System APIs - ESP32 - — ESP-IDF Programming, [https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/system.html](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/system.html), accessed 14Dec2020.
+(4) Miscellaneous System APIs - ESP32 - — ESP-IDF Programming. [https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/system.html](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/system.html). Accessed 14Dec2020.
+
+(5) Roig, JV. "Stronger Cryptography For Every Device, Everywhere: A Side-ChannelBased Approach to Collecting Virtually Unlimited Entropy In Any CPU". 2018. [http://research.jvroig.com/siderand/RoigJV_Crypto_FullPaper_ICIRSTM2018_2018-07-30.pdf](http://research.jvroig.com/siderand/RoigJV_Crypto_FullPaper_ICIRSTM2018_2018-07-30.pdf). Accessed 14Dec2020.
+
+(6) Ghosh, Abhishek. "ESP32 as Hardware Random Number Generator". 2020. [https://thecustomizewindows.com/2020/05/esp32-as-hardware-random-number-generator/](https://thecustomizewindows.com/2020/05/esp32-as-hardware-random-number-generator/). Accessed 14Dec2020.
