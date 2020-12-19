@@ -114,16 +114,17 @@ I interpret this information to mean that the "hardware" aspect of the thing dep
 OK. Let's establish some abbreviations for the sake of clarity.
 
 #### RNG
-* RNG means Random Number Generator, the broad category including any and every method for getting a computer to spit out a series of numbers that we hope will be random. What we mean by "random" is a purely mathematical concept: a series of events (within a specified range, such as 0 to 100 or heads/tails) that satisfies two requirements:
+RNG means Random Number Generator, the broad category including any and every method for getting a computer to spit out a series of numbers that we hope will be random. What we mean by "random" is a purely mathematical concept: a series of events (within a specified range, such as 0 to 100 or heads/tails) that satisfies two requirements:
  
-    1. events occur idependently of one another, and
-    2. each of the different events is always equally likely to occur.
+1. events occur idependently of one another, and
+2. each of the different events is always equally likely to occur.
 
 #### PRNG
-* PRNG means Pseudo Random Number Generator. All of these things are computer code procedures that people have been inventing since the early 1950s. They've gotten better over time. The best of them can produce very long series -- on the scale of multiple human lifetimes, even multiple solar-system lifetimes -- spewing out numbers that cannot easily be distinguised from mathematically random phenomena. High-quality PRNGs can serve very well for games and simulations. Yet, they share a common limitation. 
-    Every number that comes out of a PRNG is pre-determined. This is the opposite of what "random" means in Nature. PRNGs give a false &mdash; but convincing and even useful &mdash; appearance of randomness; they are pseudo-random. The following sidebar discusses PRNGs in greater detail. You can skip over it if you want to.
+PRNG means Pseudo Random Number Generator. All of these things are computer code procedures that people have been inventing since the early 1950s. They've gotten better over time. The best of them can produce very long series &mdash; on the scale of multiple human lifetimes, even multiple solar-system lifetimes &mdash; spewing out numbers that cannot easily be distinguised from mathematically random phenomena. High-quality PRNGs can serve very well for games and simulations. Yet, they share a common limitation.
 
-> There is no such thing as a random number. It is an axiom of mathematics that 1 is always 1 and never any other value. Likewise, every other number is always itself.
+Every number that comes out of a PRNG is pre-determined. This is the opposite of what "random" means in Nature. PRNGs give a false &mdash; but convincing and even useful &mdash; appearance of randomness; they are pseudo-random. The following sidebar discusses PRNGs in greater detail. You can scroll down to HWRNGs now, if you want to.
+
+> There is no such thing in mathematics as a random number. It is an axiom that 1 is always 1 and never any other value. Likewise, every other number is always itself.
 >
 > The concept of randomness emerges from *sequences of numbers* and the processes that produce them. In this oh-so-busy age of ours, "random sequence of numbers" takes too long to pronounce. We short-cut it to "random numbers." 
 >
@@ -135,7 +136,7 @@ OK. Let's establish some abbreviations for the sake of clarity.
 > 1. deliver the result as a "random" number; and
 > 2. store the result in memory for use as the starting point the next time around.
 >
->The number in memory is called the "seed" because the next number grows out of it. Every time the PRNG is given a certain seed value, it will return the same result. 
+> The value stored in memory is called the "seed" because the sequence grows out of it. Every time the PRNG is given a certain seed value, the same series of numbers will come forth. 
 >
 > That's not random at all. 
 >
@@ -170,7 +171,7 @@ OK. Let's establish some abbreviations for the sake of clarity.
 > This limitation of PRNGs prompted the search for another kind of randomness, derived from the physical world rather than from arithmetic.
 
 #### HWRNG
-* HWRNG means Hardware Random Number Generator. Some people will say TRNG, True Random Number Generator, to mean more or less the same thing. The idea is to incorporate the kind of randomness found in Nature, called entropy. This kind of randomess is "non-deterministic". We cannot know what causes it, nor can we predict it. In fact, prediction error is one way to gauge entropy, in the abstract. Much of what goes on in the natural world exhibits entropy when you look closely enough. HWRNGs attempt to access entropy from the physical world and express it in the form of numbers that are, by nature, truly random.
+HWRNG means Hardware Random Number Generator. Some people will say TRNG, True Random Number Generator, to mean more or less the same thing. The idea is to incorporate the kind of randomness found in Nature, sometimes called entropy. This kind of randomess is "non-deterministic". No amount of study can tell us what causes it, nor how to predict it. Much of what goes on in the natural world exhibits entropy when you look closely enough. HWRNGs attempt to access physical entropy and express it in the form of numbers that actually, by nature, occur randomly.
 
 ### Is the HWRNG on the 8266 that good?
 
