@@ -26,11 +26,11 @@ It's remarkably easy and fun!  All you need to follow this project is:
 
 ### Get serious for a moment
 > Readers should take note that I disclaim and make no effort to prove whether either of these methods produce truly random numbers. Take what's here in a playful spirit, have fun, maybe learn something, and that's all.
-
+>
 > Keep in mind that reliable, commercial-grade, cryptographically secure hardware random number generators are very difficult to make. They sell for thousands of dollars. Don't expect a five-dollar gizmo to be as good as that. If you want random numbers to help you keep secrets, then perhaps, as Obe Wan said to the stormtroopers, "This is not the droid you're looking for."
-
+>
 > Research into computer-generated random numbers has been going on for more than 70 years, and will continue to advance in the future. This article pulls together selected information I gleaned from various sources about random numbers in general, and about the 8266 specifically. I believe the sources and references listed here are reliable and they establish a sufficient foundation for this article. Yet, I'm not an expert. Here is a work of journalism, only, reflecting an incomplete awareness of the world's knowledge at the time of writing. 
-
+>
 > I make no representation or recommendations regarding how the information might be used for any specific purpose. Readers will have to perform their own, careful assessment of how the content of this article applies to their individual situation.
 
 Now, let the fun begin!
@@ -105,7 +105,7 @@ Intriguingly, the reference for esp_fill_random() includes this, ahem, cryptic r
 We get some clues, perhaps, from the corresponding reference for the ESP32: [(4)](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/system.html)
 
 > ESP32 contains a hardware random number generator, values from it can be obtained using esp_random().
-
+>
 > When Wi-Fi or Bluetooth are enabled, numbers returned by hardware random number generator (RNG) can be considered true random numbers. Without Wi-Fi or Bluetooth enabled, hardware RNG is a pseudo-random number generator. At startup, ESP-IDF bootloader seeds the hardware RNG with entropy, but care must be taken when reading random values between the start of app_main and initialization of Wi-Fi or Bluetooth drivers.
 
 I interpret this information to mean that the "hardware" aspect of the thing depends on the 8266's radios for its entropy, meaning, randomness-from-the-physical-world. It's purely a "pseudo" random number generator (PRNG), that is, a computational algorithm, without the radios. Even after being "seeded" from the radios, the PRNG algorithm is what actually produces (most of? maybe all of?) the values that show up at the address, 0x3ff20344.
@@ -113,11 +113,13 @@ I interpret this information to mean that the "hardware" aspect of the thing dep
 ### Wait, what does "pseudo-random" mean?
 OK. Let's establish some abbreviations for the sake of clarity.
 
+#### RNG
 * RNG means Random Number Generator, the broad category including any and every method for getting a computer to spit out a series of numbers that we hope will be random. What we mean by "random" is a purely mathematical concept: a series of events (within a specified range, such as 0 to 100 or heads/tails) that satisfies two requirements:
  
     1. events occur idependently of one another, and
     2. each of the different events is always equally likely to occur.
- 
+
+#### PRNG
 * PRNG means Pseudo Random Number Generator. All of these things are computer code procedures that people have been inventing since the early 1950s. They've gotten better over time. The best of them can produce very long series -- on the scale of multiple human lifetimes, even multiple solar-system lifetimes -- spewing out numbers that cannot easily be distinguised from mathematically random phenomena. High-quality PRNGs can serve very well for games and simulations. Yet, they share a common limitation. 
     Every number that comes out of a PRNG is pre-determined. This is the opposite of what "random" means in Nature. PRNGs give a false &mdash; but convincing and even useful &mdash; appearance of randomness; they are pseudo-random. The following sidebar discusses PRNGs in greater detail. You can skip over it if you want to.
 
@@ -136,7 +138,38 @@ OK. Let's establish some abbreviations for the sake of clarity.
 >The number in memory is called the "seed" because the next number grows out of it. Every time the PRNG is given a certain seed value, it will return the same result. 
 >
 > That's not random at all. 
+>
+> By way of analogy, you can think of a PRNG as a gigantic roulette wheel with, for example, 4 billion unique numbers arranged around its rim: zero through 4 billion, all of them there, no two alike. Each time you "call" it, the PRNG advances the wheel by just one click, to the next notch, and there's your new number.
+>
+> How can such a thing appear to be random, when it's not?
+>
+> In effect, the code in a PRNG scrambles the order in which the numbers occur on the rim of the wheel. 2 does not necessarily follow 1. The number that comes after, say, 1,234,567, could be 19. Followed by 8,018,130. Then 3,034,880,193. Then 9,369.
+>
+> You can perceive (and use) the sequence of numbers on the wheel as if it were random, as long as three things are true:
+> 1. the numbers are distributed in a way that satisfies mathematical definitions for randomness; 
+> 2. the wheel has more numbers on it than you need; and 
+> 3. you don't know what order the numbers are in.
+>
+> Modern PRNGs can give results that appear to be random for most practical purposes. How? They define truly enormous roulette wheels. It takes two ingredients:
+>
+> 1. really, really well-crafted code founded on deep, solid math; and
+> 2. very large seed values.
+>
+> Specifying the memory layout and the code for a PRNG fully determines the entire sequence of all the "random" numbers it can produce.
+>
+> In other words, even the best of them arranges all the numbers it is capable of, into a certain, predetermined order. The roulette wheel analogy helps to visualize certain challenges facing all PRNGs.
+>
+> 1. The wheel represents a cycle that repeats. All PRNGs eventually repeat.
+> 2. If you can steal a good look at the wheel, then you can predict every value that follows from any seed.
+> 3. You can predict all the values that precede the seed, too.
+>
+> It means you could cheat a video slot machine that uses the PRNG. 
+>
+> Also, it means you could decipher secret messages encoded with the not-actually-random numbers coming off the PRNG's virtual roulette wheel. All of the future messages. And all of the past ones.
+>
+> This limitation of PRNGs prompted the search for another kind of randomness, derived from the physical world rather than from arithmetic.
 
+#### HWRNG
 * HWRNG means Hardware Random Number Generator. Some people will say TRNG, True Random Number Generator, to mean more or less the same thing. The idea is to incorporate the kind of randomness found in Nature, called entropy. This kind of randomess is "non-deterministic". We cannot know what causes it, nor can we predict it. In fact, prediction error is one way to gauge entropy, in the abstract. Much of what goes on in the natural world exhibits entropy when you look closely enough. HWRNGs attempt to access entropy from the physical world and express it in the form of numbers that are, by nature, truly random.
 
 ### Is the HWRNG on the 8266 that good?
